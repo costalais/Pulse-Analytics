@@ -46,7 +46,7 @@ As requisições são realizadas com `fetch()` e `async/await`, com tratamento d
 1. Clone o repositório:
 
    ```bash
-   git clone https://github.com/costalais/pulse-analytics.git
+   git clone https://github.com/costalais/Pulse-Analytics.git
    ```
 
 2. Entre na pasta:
