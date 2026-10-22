@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="Dashboard interativo de indicadores cambiais com dados de uma API externa.">
+  <title>Pulse — Dashboard de Dados</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" aria-label="Pulse página inicial">
+        <span class="brand-mark"><span></span><span></span><span></span></span>
+        <span>PULSE<span class="brand-dot">.</span></span>
+      </a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="nav">
+        <a class="nav-item active" href="#overview"><span class="nav-icon">▦</span> Visão geral</a>
+        <a class="nav-item" href="#trend"><span class="nav-icon">⌁</span> Análise cambial</a>
+        <a class="nav-item" href="#converter"><span class="nav-icon">⇄</span> Conversor</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="live-status"><span class="pulse-dot"></span><span>API conectada</span></div>
+        <div class="profile">
+          <div class="avatar">PD</div>
+          <div><strong>Pulse Dashboard</strong><small>Projeto de portfólio</small></div>
+          <span class="more">···</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content" id="overview">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+        <div class="breadcrumb">Workspace <span>/</span> <strong>Visão geral</strong></div>
+        <div class="top-actions">
+          <span class="date-label" id="todayLabel">Atualizando data…</span>
+          <button class="icon-button" id="refreshBtn" aria-label="Atualizar dados" title="Atualizar dados">↻</button>
+          <div class="avatar avatar-small">PD</div>
+        </div>
+      </header>
+
+      <section class="page-heading">
+        <div>
+          <div class="eyebrow"><span class="eyebrow-line"></span> MARKET INTELLIGENCE</div>
+          <h1>Visão geral<span class="heading-period">.</span></h1>
+          <p>Acompanhe indicadores cambiais e explore tendências de mercado.</p>
+        </div>
+        <div class="updated-pill"><span class="pulse-dot"></span><span id="updatedAt">Buscando dados em tempo real</span></div>
+      </section>
+
+      <section class="filter-bar" aria-label="Filtros do dashboard">
+        <div class="filter-title"><span class="filter-symbol">⌘</span> Filtros</div>
+        <label class="filter-control"><span>Moeda-base</span>
+          <select id="baseCurrency" aria-label="Moeda base">
+            <option value="BRL">BRL · Real brasileiro</option>
+            <option value="USD">USD · Dólar americano</option>
+            <option value="EUR">EUR · Euro</option>
+          </select>
+        </label>
+        <label class="filter-control"><span>Comparar com</span>
+          <select id="quoteCurrency" aria-label="Moeda de comparação">
+            <option value="USD">USD · Dólar americano</option>
+            <option value="EUR">EUR · Euro</option>
+            <option value="GBP">GBP · Libra esterlina</option>
+            <option value="JPY">JPY · Iene japonês</option>
+            <option value="BRL">BRL · Real brasileiro</option>
+          </select>
+        </label>
+        <div class="filter-spacer"></div>
+        <button class="primary-button" id="applyFilters"><span>↗</span> Aplicar filtros</button>
+      </section>
+
+      <div id="notice" class="notice hidden" role="status"></div>
+
+      <section class="metrics-grid" aria-label="Indicadores principais">
+        <article class="metric-card featured">
+          <div class="metric-top"><span class="metric-label">COTAÇÃO ATUAL</span><span class="metric-icon">↗</span></div>
+          <div class="metric-value" id="currentRate">—</div>
+          <div class="metric-foot"><span class="metric-currency" id="pairLabel">BRL / USD</span><span class="metric-caption">por 1 unidade da moeda-base</span></div>
+          <div class="mini-chart"><svg viewBox="0 0 240 42" preserveAspectRatio="none" aria-hidden="true"><path d="M0 32 C18 28,20 35,36 26 S61 31,78 19 S99 27,115 16 S143 21,159 12 S180 19,195 8 S220 14,240 3" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-label">VARIAÇÃO NO PERÍODO</span><span class="metric-icon neutral">%</span></div>
+          <div class="metric-value" id="periodChange">—</div>
+          <div class="metric-foot"><span class="metric-badge" id="changeBadge">Calculando</span><span class="metric-caption">últimos 30 dias</span></div>
+          <div class="metric-note">Comparação entre a primeira e a última cotação disponível.</div>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-label">MÁXIMA DO PERÍODO</span><span class="metric-icon neutral">↑</span></div>
+          <div class="metric-value" id="maxRate">—</div>
+          <div class="metric-foot"><span class="metric-caption">Maior cotação registrada</span></div>
+          <div class="metric-note" id="maxDate">Janela de 30 dias</div>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-label">MÍNIMA DO PERÍODO</span><span class="metric-icon neutral">↓</span></div>
+          <div class="metric-value" id="minRate">—</div>
+          <div class="metric-foot"><span class="metric-caption">Menor cotação registrada</span></div>
+          <div class="metric-note" id="minDate">Janela de 30 dias</div>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel chart-panel" id="trend">
+          <div class="panel-header">
+            <div><div class="panel-kicker">DESEMPENHO</div><h2>Histórico da cotação</h2><p>Variação ao longo dos últimos 30 dias</p></div>
+            <div class="chart-legend"><span class="legend-dot"></span><span id="chartPair">BRL / USD</span></div>
+          </div>
+          <div class="chart-wrap"><canvas id="rateChart" aria-label="Gráfico histórico de cotação" role="img"></canvas><div class="chart-loading" id="chartLoading"><span class="spinner"></span> Carregando histórico…</div></div>
+          <div class="chart-footer"><span><span class="legend-dot"></span> Cotação diária</span><span id="chartRange">Últimos 30 dias</span></div>
+        </article>
+        <article class="panel breakdown-panel">
+          <div class="panel-header compact">
+            <div><div class="panel-kicker">MERCADO</div><h2>Outras cotações</h2><p>Moedas em relação à base selecionada</p></div>
+            <span class="round-icon">◎</span>
+          </div>
+          <div class="currency-list" id="currencyList">
+            <div class="list-loading"><span class="spinner"></span> Buscando cotações…</div>
+          </div>
+          <div class="panel-bottom-note"><span class="info-icon">i</span> Valores indicativos fornecidos pela API Frankfurter.</div>
+        </article>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="panel converter-panel" id="converter">
+          <div class="panel-header compact">
+            <div><div class="panel-kicker">FERRAMENTA</div><h2>Conversor de moedas</h2><p>Simule conversões com a cotação atual</p></div>
+            <span class="round-icon">⇄</span>
+          </div>
+          <div class="converter-form">
+            <label>Valor para converter<div class="amount-wrap"><span id="fromSymbol">R$</span><input id="amountInput" type="number" min="0" step="any" value="1000" inputmode="decimal"></div></label>
+            <div class="converter-currencies">
+              <label>De<select id="converterFrom"><option value="BRL">BRL · Real</option><option value="USD">USD · Dólar</option><option value="EUR">EUR · Euro</option><option value="GBP">GBP · Libra</option><option value="JPY">JPY · Iene</option></select></label>
+              <button id="swapCurrencies" class="swap-button" aria-label="Inverter moedas">⇄</button>
+              <label>Para<select id="converterTo"><option value="USD">USD · Dólar</option><option value="BRL">BRL · Real</option><option value="EUR">EUR · Euro</option><option value="GBP">GBP · Libra</option><option value="JPY">JPY · Iene</option></select></label>
+            </div>
+            <div class="conversion-result"><span>Valor convertido</span><strong id="convertedValue">—</strong><small id="conversionRate">Calculando taxa de câmbio…</small></div>
+          </div>
+        </article>
+        <article class="panel methodology-panel">
+          <div class="panel-header compact">
+            <div><div class="panel-kicker">SOBRE OS DADOS</div><h2>Transparência primeiro</h2><p>Como interpretar este painel</p></div>
+            <span class="round-icon">✳</span>
+          </div>
+          <div class="method-list">
+            <div class="method-item"><span class="method-number">01</span><div><strong>Fonte externa</strong><p>Dados cambiais públicos da API Frankfurter, baseada em taxas de referência.</p></div></div>
+            <div class="method-item"><span class="method-number">02</span><div><strong>Atualização sob demanda</strong><p>Use o botão de atualizar para consultar os dados mais recentes disponíveis.</p></div></div>
+            <div class="method-item"><span class="method-number">03</span><div><strong>Uso informativo</strong><p>As cotações são indicativas e não representam uma oferta de negociação.</p></div></div>
+          </div>
+        </article>
+      </section>
+      <footer class="footer"><span>© 2026 PULSE ANALYTICS</span><span>Desenvolvido com HTML, CSS, JavaScript e API REST</span><a href="https://www.frankfurter.app/" target="_blank" rel="noreferrer">Fonte de dados ↗</a></footer>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
